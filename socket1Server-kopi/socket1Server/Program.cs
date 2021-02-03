@@ -3,15 +3,11 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using cryptofar;
 
 namespace socket1Server
 {
     class Program
     {
-        static public string key = "jfkgotmyvhspcandxlrwebquiz";
-
-        static public PrivateKeyEncryption encryption = new PrivateKeyEncryption();
         static public List<TcpClient> clients = new List<TcpClient>();
         static public void Main(string[] args)
         {
@@ -29,9 +25,18 @@ namespace socket1Server
                 string text = Console.ReadLine();
                 byte[] buffer = Encoding.UTF8.GetBytes(text);
 
+                byte key = 255;
+
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    int change = i + key;
+                    while (change + buffer[i] > 255) change -= 256;
+                    buffer[i] += (byte)change;
+                }
+
                 foreach (TcpClient client in clients)
                 {
-                    client.GetStream().Write(encryption.SubstitutionEncrypt(buffer, key), 0, buffer.Length);
+                    client.GetStream().Write(buffer, 0, buffer.Length);
                 }
             }
         }
@@ -55,7 +60,17 @@ namespace socket1Server
             while (isRunning)
             {
                 int read = await stream.ReadAsync(buffer, 0, buffer.Length);
-                string text = Encoding.UTF8.GetString(encryption.SubstitutionDecrypt(buffer, key), 0, read);
+
+                byte key = 255;
+
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    int change = i + key;
+                    while (change - buffer[i] < 0) change += 256;
+                    buffer[i] -= (byte)change;
+                }
+
+                string text = Encoding.UTF8.GetString(buffer, 0, read);
                 Console.WriteLine("Client writes: " + text);
             }
         }

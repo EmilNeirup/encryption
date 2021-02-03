@@ -2,12 +2,16 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using cryptofar;
 
 namespace socket1client
 {
     class Program
     {
-        static public void Main(string[] args)
+        static public string key = "jfkgotmyvhspcandxlrwebquiz";
+
+        static public PrivateKeyEncryption encryption = new PrivateKeyEncryption();
+        static void Main(string[] args)
         {
             TcpClient client = new TcpClient();
 
@@ -22,51 +26,26 @@ namespace socket1client
             while (true)
             {
                 ReceiveMessage(stream);
-
                 Console.Write("Write your message here: ");
                 string text = Console.ReadLine();
-                byte[] buffer = Encoding.UTF8.GetBytes(text);
 
-                if (text == "c")
+                if (text.ToLower() == "c")
                 {
                     break;
                 }
 
-                byte key = 255;
-
-                for (int i = 0; i < buffer.Length; i++)
-                {
-                    int change = i + key;
-                    while (change + buffer[i] > 255) change -= 256;
-                    buffer[i] += (byte)change;
-                }
-
-                stream.Write(buffer, 0, buffer.Length);
+                byte[] buffer = Encoding.UTF8.GetBytes(text);
+                stream.Write(encryption.SubstitutionEncrypt(buffer, key), 0, buffer.Length);
             }
-
             client.Close();
         }
 
         static public async void ReceiveMessage(NetworkStream stream)
         {
             byte[] buffer = new byte[256];
-
             int numberOfBytesRead = await stream.ReadAsync(buffer, 0, 256);
-
-            byte key = 255;
-
-            for (int i = 0; i < numberOfBytesRead; i++)
-            {
-                int change = i + key;
-                while (change - buffer[i] < 0) change += 256;
-                buffer[i] -= (byte)change;
-            }
-
-            string recievedMessage = Encoding.UTF8.GetString(buffer, 0, numberOfBytesRead);
-
-            Console.WriteLine(recievedMessage);
+            string recievedMessage = Encoding.UTF8.GetString(encryption.SubstitutionDecrypt(buffer, key), 0, numberOfBytesRead);
+            Console.WriteLine("Server writes: " + recievedMessage);
         }
-
     }
-
 }
