@@ -31,45 +31,42 @@ namespace cryptofar
 
         public byte[] SubstitutionEncrypt(byte[] bytes, string key)
         {
-            string text = Encoding.UTF8.GetString(bytes);
-
-            char[] chars = new char[text.Length];
-
-            for (int i = 0; i < text.Length; i++)
+            for (int i = 0; i < bytes.Length; i++)
             {
-                if (text[i] == ' ')
+                if (i % 4 == 0)
                 {
-                    chars[i] = ' ';
+                    bytes[i] += (byte)key[0];
+                }
+                else if (i % 2 == 0)
+                {
+                    bytes[i] += (byte)key[1];
                 }
                 else
                 {
-                    int j = bytes[i] - 97;
-                    chars[i] = key[j];
+                    bytes[i] += (byte)key[2];
                 }
             }
-
-            return Encoding.UTF8.GetBytes(chars);
+            return bytes;
         }
 
         public byte[] SubstitutionDecrypt(byte[] bytes, string key)
         {
-            string text = Encoding.UTF8.GetString(bytes);
-            char[] chars = new char[text.Length];
-
-            for (int i = 0; i < text.Length; i++)
+            for (int i = 0; i < bytes.Length; i++)
             {
-                if (text[i] == ' ')
+                if (i % 4 == 0)
                 {
-                    chars[i] = ' ';
+                    bytes[i] -= (byte)key[0];
+                }
+                else if (i % 2 == 0)
+                {
+                    bytes[i] -= (byte)key[1];
                 }
                 else
                 {
-                    int j = key.IndexOf(text[i]) - 97;
-                    chars[i] = (char)j;
+                    bytes[i] -= (byte)key[2];
                 }
             }
-
-            return Encoding.UTF8.GetBytes(chars);
+            return bytes;
         }
     }
 

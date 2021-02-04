@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Numerics;
 using System.Net.Sockets;
 using System.Text;
 using cryptofar;
@@ -8,8 +9,10 @@ namespace socket1client
 {
     class Program
     {
-        static public string key = "jfkgotmyvhspcandxlrwebquiz";
+        static public long b = 7897893456;
+        static public string key = "";
 
+        static public KeyExchange keyExchange = new KeyExchange();
         static public PrivateKeyEncryption encryption = new PrivateKeyEncryption();
         static void Main(string[] args)
         {
@@ -23,6 +26,20 @@ namespace socket1client
 
             NetworkStream stream = client.GetStream();
 
+            byte[] buffer = new byte[256];
+
+            int nBytesRead = stream.Read(buffer);
+
+            byte[] keyBuffer = BigInteger.ModPow(keyExchange.g, b, keyExchange.n).ToByteArray();
+
+            stream.Write(keyBuffer);
+
+            byte[] temp = new byte[nBytesRead];
+
+            Array.Copy(buffer, 0, temp, 0, nBytesRead);
+
+            key = keyExchange.GenerateKey(new BigInteger(buffer), b);
+
             while (true)
             {
                 ReceiveMessage(stream);
@@ -34,7 +51,8 @@ namespace socket1client
                     break;
                 }
 
-                byte[] buffer = Encoding.UTF8.GetBytes(text);
+                buffer = Encoding.UTF8.GetBytes(text);
+
                 stream.Write(encryption.SubstitutionEncrypt(buffer, key), 0, buffer.Length);
             }
             client.Close();
